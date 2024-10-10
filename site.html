@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S3-like Store Tester</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        button { margin: 5px; }
+        #result { margin-top: 20px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>S3-like Store Tester</h1>
+    <div>
+        <button onclick="listBuckets()">List Buckets</button>
+        <button onclick="createBucket()">Create Bucket</button>
+        <button onclick="listObjects()">List Objects</button>
+        <button onclick="uploadObject()">Upload Object</button>
+        <button onclick="downloadObject()">Download Object</button>
+        <button onclick="deleteObject()">Delete Object</button>
+        <button onclick="deleteBucket()">Delete Bucket</button>
+    </div>
+    <div id="result"></div>
+
+    <script>
+        const baseUrl = 'http://localhost:8080';
+        const resultDiv = document.getElementById('result');
+
+        function showResult(data) {
+            resultDiv.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+        }
+
+        async function listBuckets() {
+            try {
+                const response = await axios.get(baseUrl);
+                showResult(response.data);
+            } catch (error) {
+                showResult('Error: ' + error.message);
+            }
+        }
+
+        async function createBucket() {
+            const bucketName = prompt('Enter bucket name:');
+            if (!bucketName) return;
+            try {
+                await axios.put(`${baseUrl}/${bucketName}`);
+                showResult(`Bucket "${bucketName}" created successfully.`);
+            } catch (error) {
+                showResult('Error: ' + error.message);
+            }
+        }
+
+        async function listObjects() {
+            const bucketName = prompt('Enter bucket name:');
+            if (!bucketName) return;
+            try {
+                const response = await axios.get(`${baseUrl}/${bucketName}`);
+                showResult(response.data);
+            } catch (error) {
+                showResult('Error: ' + error.message);
+            }
+        }
+
+        async function uploadObject() {
+            const bucketName = prompt('Enter bucket name:');
+            if (!bucketName) return;
+            const objectKey = prompt('Enter object key:');
+            if (!objectKey) return;
+            const content = prompt('Enter object content:');
+            if (content === null) return;
+            try {
+                await axios.put(`${baseUrl}/${bucketName}/${objectKey}`, content, {
+                    headers: { 'Content-Type': 'text/plain' }
+                });
+                showResult(`Object "${objectKey}" uploaded to bucket "${bucketName}" successfully.`);
+            } catch (error) {
+                showResult('Error: ' + error.message);
+            }
+        }
+
+        async function downloadObject() {
+            const bucketName = prompt('Enter bucket name:');
+            if (!bucketName) return;
+            const objectKey = prompt('Enter object key:');
+            if (!objectKey) return;
+            try {
+                const response = await axios.get(`${baseUrl}/${bucketName}/${objectKey}`);
+                showResult(`Downloaded content: ${response.data}`);
+            } catch (error) {
+                showResult('Error: ' + error.message);
+            }
+        }
+
+        async function deleteObject() {
+            const bucketName = prompt('Enter bucket name:');
+            if (!bucketName) return;
+            const objectKey = prompt('Enter object key:');
+            if (!objectKey) return;
+            try {
+                await axios.delete(`${baseUrl}/${bucketName}/${objectKey}`);
+                showResult(`Object "${objectKey}" deleted from bucket "${bucketName}" successfully.`);
+            } catch (error) {
+                showResult('Error: ' + error.message);
+            }
+        }
+
+        async function deleteBucket() {
+            const bucketName = prompt('Enter bucket name:');
+            if (!bucketName) return;
+            try {
+                await axios.delete(`${baseUrl}/${bucketName}`);
+                showResult(`Bucket "${bucketName}" deleted successfully.`);
+            } catch (error) {
+                showResult('Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
